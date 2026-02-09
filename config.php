@@ -19,6 +19,12 @@ if (!defined('KIOSK_COOKIE_NAME')) {
     define('KIOSK_COOKIE_NAME', 'kiosk_token');
 }
 
+// Password di setup per la pagina setup_kikos.php
+// Puoi sovrascriverla impostando la variabile d'ambiente SETUP_PASSWORD su Render
+if (!defined('SETUP_PASSWORD')) {
+    define('SETUP_PASSWORD', getenv('SETUP_PASSWORD') ?: 'changeme-setup');
+}
+
 function getPDO(): PDO {
     static $pdo = null;
     if ($pdo === null) {
