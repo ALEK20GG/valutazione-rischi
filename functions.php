@@ -37,27 +37,6 @@ function doLogout(): void {
 }
 
 /**
- * Registra un accesso/uscita nel log
- */
-function insertLog(int $uid, int $action, int $is_kiosk): void {
-    try {
-        $pdo = getPDO();
-        $stmt = $pdo->prepare(
-            "INSERT INTO t_log (uid, action, is_kiosk, timestamp) 
-             VALUES (:uid, :action, :is_kiosk, NOW())"
-        );
-        $stmt->execute([
-            ':uid' => $uid,
-            ':action' => $action,
-            ':is_kiosk' => $is_kiosk,
-        ]);
-    } catch (Exception $e) {
-        // Log in errore, continua comunque
-        error_log("Log insert error: " . $e->getMessage());
-    }
-}
-
-/**
  * Recupera il nome utente dalla sessione
  */
 function getCurrentUsername(): ?string {
@@ -103,14 +82,26 @@ function removeKioskCookie(): void {
     unset($_COOKIE[KIOSK_COOKIE_NAME]);
 }
 
+/**
+ * Registra un accesso/uscita nel log
+ * op_type: 1 = login, 0 = logout
+ */
 function insertLog(int $uid, int $op_type, int $is_kiosk): void {
-    $pdo = getPDO();
-    $stmt = $pdo->prepare("INSERT INTO t_log (uid, op_type, timestamp, is_kiosk) VALUES (:uid, :op_type, NOW(), :is_kiosk)");
-    $stmt->execute([
-        ':uid' => $uid,
-        ':op_type' => $op_type,
-        ':is_kiosk' => $is_kiosk ? 1 : 0,
-    ]);
+    try {
+        $pdo = getPDO();
+        $stmt = $pdo->prepare(
+            "INSERT INTO t_log (uid, op_type, timestamp, is_kiosk) 
+             VALUES (:uid, :op_type, NOW(), :is_kiosk)"
+        );
+        $stmt->execute([
+            ':uid' => $uid,
+            ':op_type' => $op_type,
+            ':is_kiosk' => $is_kiosk ? 1 : 0,
+        ]);
+    } catch (Exception $e) {
+        // Log in errore, continua comunque
+        error_log("Log insert error: " . $e->getMessage());
+    }
 }
 
 /**
