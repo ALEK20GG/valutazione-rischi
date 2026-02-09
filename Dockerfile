@@ -1,8 +1,30 @@
 # Base image PHP + Apache
 FROM php:8.2-apache
 
-# Install MySQL server + utilities
-RUN apt-get update && \
+# Abilita mod_rewrite per URL friendlies
+RUN a2enmod rewrite
+
+# Installa le estensioni PHP necessarie
+RUN docker-php-ext-install pdo pdo_mysql
+
+# Imposta la directory root di Apache
+ENV APACHE_DOCUMENT_ROOT=/var/www/html
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+
+# Copia il progetto nella directory di Apache
+COPY . /var/www/html/
+
+# Imposta i permessi
+RUN chown -R www-data:www-data /var/www/html
+
+# Esponi la porta 8080 (necessaria per Render)
+EXPOSE 8080
+
+# Modifica Apache per ascoltare sulla porta 8080
+RUN sed -i 's/80/8080/g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf
+
+CMD ["apache2-foreground"]
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         default-mysql-server \
         supervisor && \

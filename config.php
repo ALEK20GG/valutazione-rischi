@@ -1,24 +1,17 @@
 <?php
 // config.php
-
 declare(strict_types=1);
 
-// Con MySQL nel container Docker
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'mydb');
-define('DB_USER', 'root');
-define('DB_PASS', 'abcxyz');
+// Database configuration per Render
+$db_host = getenv('DB_HOST') ?: '127.0.0.1';
+$db_name = getenv('DB_NAME') ?: 'mydb';
+$db_user = getenv('DB_USER') ?: 'root';
+$db_pass = getenv('DB_PASS') ?: 'abcxyz';
+$db_port = getenv('DB_PORT') ?: 3306;
 
 // Token segreto per identificare il kiosk tramite cookie
-// IMPORTANTE: Cambia questo valore con uno casuale e sicuro!
-// Oppure usa una variabile d'ambiente KIOSK_TOKEN
 if (!defined('KIOSK_TOKEN')) {
-    define('KIOSK_TOKEN', getenv('KIOSK_TOKEN') ?: 'aaaaaa');
-}
-
-// Password per la pagina di setup (opzionale ma consigliato)
-if (!defined('SETUP_PASSWORD')) {
-    define('SETUP_PASSWORD', getenv('SETUP_PASSWORD') ?: 'setup123');
+    define('KIOSK_TOKEN', getenv('KIOSK_TOKEN') ?: 'default-kiosk-token');
 }
 
 // Nome del cookie per identificare il kiosk
@@ -29,8 +22,14 @@ if (!defined('KIOSK_COOKIE_NAME')) {
 function getPDO(): PDO {
     static $pdo = null;
     if ($pdo === null) {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+        $db_host = getenv('DB_HOST') ?: '127.0.0.1';
+        $db_name = getenv('DB_NAME') ?: 'mydb';
+        $db_user = getenv('DB_USER') ?: 'root';
+        $db_pass = getenv('DB_PASS') ?: 'abcxyz';
+        $db_port = getenv('DB_PORT') ?: 3306;
+        
+        $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
+        $pdo = new PDO($dsn, $db_user, $db_pass, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]);

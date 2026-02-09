@@ -11,32 +11,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username === '' || $password === '') {
         $errors[] = "Compila tutti i campi.";
     } else {
-        $pdo = getPDO();
-        $stmt = $pdo->prepare("SELECT * FROM t_user WHERE username = :username LIMIT 1");
-        $stmt->execute([':username' => $username]);
-        $user = $stmt->fetch();
+        try {
+            $pdo = getPDO();
+            $stmt = $pdo->prepare("SELECT * FROM t_user WHERE username = :username LIMIT 1");
+            $stmt->execute([':username' => $username]);
+            $user = $stmt->fetch();
 
-        if (!$user || !password_verify($password, $user['password'])) {
-            $errors[] = "Credenziali non valide.";
-        } else {
-            $uid = (int)$user['uid'];
-            $kiosk = isKiosk() ? 1 : 0;
+            if (!$user || !password_verify($password, $user['password'])) {
+                $errors[] = "Credenziali non valide.";
+            } else {
+                $uid = (int)$user['uid'];
 
-            if ($kiosk) {
-                handleKioskPreLogin($uid);
-                $stmt = $pdo->prepare("UPDATE t_user SET online = 1, last_heartbeat = NOW() WHERE uid = :uid");
-                $stmt->execute([':uid' => $uid]);
+                insertLog($uid, 1, isKiosk() ? 1 : 0);
+
+                session_regenerate_id(true);
+                $_SESSION['uid'] = $uid;
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['is_kiosk'] = isKiosk() ? 1 : 0;
+
+                header('Location: niosh_form.php');
+                exit;
             }
-
-            insertLog($uid, 1, $kiosk);
-
-            session_regenerate_id(true);
-            $_SESSION['uid'] = $uid;
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['is_kiosk'] = $kiosk;
-
-            header('Location: dashboard.php');
-            exit;
+        } catch (Exception $e) {
+            $errors[] = "Errore di connessione al database.";
+            error_log("Login error: " . $e->getMessage());
         }
     }
 }
@@ -46,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - NIOSH Calculator</title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -83,10 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="links">
             <a href="index.php">← Torna alla home</a>
-            <?php if (isKiosk()): ?>
-                <span style="margin: 0 8px">•</span>
-                <a href="register.php">Non hai un account? Registrati</a>
-            <?php endif; ?>
         </div>
     </div>
 </body>

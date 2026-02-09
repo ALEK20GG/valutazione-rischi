@@ -1,16 +1,74 @@
 <?php
 // functions.php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/encryption.php';
-session_start();
+
+// Session management
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 /**
- * Rileva se la richiesta proviene dalla postazione dedicata (kiosk)
- * Usa un cookie con token segreto invece dell'IP
+ * Verifica se la postazione è un kiosk
  */
 function isKiosk(): bool {
-    // Verifica se esiste il cookie e se il valore corrisponde al token
-    return isset($_COOKIE[KIOSK_COOKIE_NAME]) && $_COOKIE[KIOSK_COOKIE_NAME] === KIOSK_TOKEN;
+    return !empty($_COOKIE[KIOSK_COOKIE_NAME]) && $_COOKIE[KIOSK_COOKIE_NAME] === KIOSK_TOKEN;
+}
+
+/**
+ * Richiede autenticazione
+ */
+function requireAuth(): void {
+    if (empty($_SESSION['uid'])) {
+        header('Location: login.php');
+        exit;
+    }
+}
+
+/**
+ * Logout
+ */
+function doLogout(): void {
+    if (!empty($_SESSION['uid'])) {
+        insertLog((int)$_SESSION['uid'], 0, isKiosk() ? 1 : 0);
+    }
+    session_destroy();
+    header('Location: index.php');
+    exit;
+}
+
+/**
+ * Registra un accesso/uscita nel log
+ */
+function insertLog(int $uid, int $action, int $is_kiosk): void {
+    try {
+        $pdo = getPDO();
+        $stmt = $pdo->prepare(
+            "INSERT INTO t_log (uid, action, is_kiosk, timestamp) 
+             VALUES (:uid, :action, :is_kiosk, NOW())"
+        );
+        $stmt->execute([
+            ':uid' => $uid,
+            ':action' => $action,
+            ':is_kiosk' => $is_kiosk,
+        ]);
+    } catch (Exception $e) {
+        // Log in errore, continua comunque
+        error_log("Log insert error: " . $e->getMessage());
+    }
+}
+
+/**
+ * Recupera il nome utente dalla sessione
+ */
+function getCurrentUsername(): ?string {
+    return $_SESSION['username'] ?? null;
+}
+
+/**
+ * Recupera l'ID utente dalla sessione
+ */
+function getCurrentUid(): ?int {
+    return isset($_SESSION['uid']) ? (int)$_SESSION['uid'] : null;
 }
 
 /**

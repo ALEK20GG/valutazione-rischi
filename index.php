@@ -2,9 +2,9 @@
 // index.php
 require_once __DIR__ . '/functions.php';
 
-// SE SESSIONE ATTIVA → vai direttamente alla dashboard
+// SE SESSIONE ATTIVA → vai direttamente alla app
 if (!empty($_SESSION['uid'])) {
-    header('Location: dashboard.php');
+    header('Location: niosh_form.php');
     exit;
 }
 
@@ -15,14 +15,14 @@ $isKiosk = isKiosk();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor di Log - Home</title>
+    <title>NIOSH Risk Calculator</title>
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🖥️ Monitor di Log</h1>
-            <p>Sistema di gestione accessi e monitoraggio</p>
+            <h1>⚠️ NIOSH Risk Calculator</h1>
+            <p>Valutazione dei rischi di sollevamento manuale</p>
             <?php if ($isKiosk): ?>
                 <span class="badge kiosk">📍 Postazione Kiosk</span>
             <?php else: ?>
@@ -31,7 +31,7 @@ $isKiosk = isKiosk();
         </div>
 
         <p style="text-align: center; color: #6b7280; margin-bottom: 24px;">
-            Benvenuto! Effettua il login o registrati per accedere al sistema.
+            Benvenuto! Effettua il login per accedere all'applicazione.
         </p>
 
         <ul class="menu">
@@ -47,7 +47,7 @@ $isKiosk = isKiosk();
                         ✏️ Registrati
                     </a>
                 </li>
-            <?php else: ?>
+            <?php endif; ?>
                 <li>
                     <em>📍 La registrazione è disponibile solo dalla postazione kiosk dedicata</em>
                 </li>

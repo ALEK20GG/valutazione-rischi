@@ -1,13 +1,48 @@
 -- init.sql
-CREATE DATABASE IF NOT EXISTS mydb;
+CREATE TABLE IF NOT EXISTS t_user (
+    uid INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    online INT DEFAULT 0,
+    last_heartbeat TIMESTAMP NULL
+);
 
-USE mysql;
+CREATE TABLE IF NOT EXISTS t_log (
+    lid INT AUTO_INCREMENT PRIMARY KEY,
+    uid INT NOT NULL,
+    action INT NOT NULL COMMENT '1=login, 0=logout',
+    is_kiosk INT DEFAULT 0,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES t_user(uid) ON DELETE CASCADE,
+    INDEX idx_uid (uid),
+    INDEX idx_timestamp (timestamp)
+);
 
--- Imposta password per root usando la sintassi MariaDB
-SET PASSWORD FOR 'root'@'localhost' = PASSWORD('abcxyz');
+CREATE TABLE IF NOT EXISTS t_niosh_evaluations (
+    eval_id INT AUTO_INCREMENT PRIMARY KEY,
+    uid INT NOT NULL,
+    eval_name VARCHAR(255),
+    weight DECIMAL(10,2),
+    horizontal_distance DECIMAL(10,2),
+    vertical_distance DECIMAL(10,2),
+    vertical_height DECIMAL(10,2),
+    distance_moved DECIMAL(10,2),
+    asymmetric_angle DECIMAL(10,2),
+    frequency DECIMAL(10,2),
+    duration VARCHAR(50),
+    grip_quality VARCHAR(50),
+    rwl DECIMAL(10,2),
+    li DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uid) REFERENCES t_user(uid) ON DELETE CASCADE,
+    INDEX idx_uid (uid),
+    INDEX idx_created_at (created_at)
+);
 
--- Permetti connessioni TCP/IP per root
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY 'abcxyz' WITH GRANT OPTION;
+-- Admin user (password: admin123)
+INSERT IGNORE INTO t_user (uid, username, password) 
+VALUES (1, 'admin', '$2y$10$YourHashedPasswordHere');
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' IDENTIFIED BY 'abcxyz' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'abcxyz' WITH GRANT OPTION;
 
