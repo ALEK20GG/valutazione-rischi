@@ -43,15 +43,14 @@ $isKiosk = isKiosk();
 
             <?php if ($isKiosk): ?>
                 <li>
-                    <a href="register.php">
-                        ✏️ Registrati
-                    </a>
+                    <a href="register.php">✏️ Registrati</a>
                 </li>
-            <?php endif; ?>
+            <?php else: ?>
                 <li>
                     <em>📍 La registrazione è disponibile solo dalla postazione kiosk dedicata</em>
                 </li>
             <?php endif; ?>
+
         </ul>
 
     </div>
