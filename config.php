@@ -34,8 +34,8 @@ function getPDO(): PDO {
         $db_pass = getenv('DB_PASS') ?: 'postgres';
         $db_port = getenv('DB_PORT') ?: 5432;
         
-        // DSN per PostgreSQL
-        $dsn = "pgsql:host={$db_host};port={$db_port};dbname={$db_name}";
+        // DSN per PostgreSQL (Supabase richiede SSL)
+        $dsn = "pgsql:host={$db_host};port={$db_port};dbname={$db_name};sslmode=require";
         $pdo = new PDO($dsn, $db_user, $db_pass, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
