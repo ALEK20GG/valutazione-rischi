@@ -1,17 +1,16 @@
 FROM php:8.2-apache
 
-# Aggiorna i pacchetti e installa MariaDB + supervisor
+# Aggiorna i pacchetti di sistema e installa librerie per PostgreSQL
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        mariadb-server \
-        supervisor && \
+        libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Abilita mod_rewrite
 RUN a2enmod rewrite
 
-# Installa estensioni PHP necessarie (PDO MySQL)
-RUN docker-php-ext-install pdo pdo_mysql
+# Installa estensione PHP pdo_pgsql per PostgreSQL
+RUN docker-php-ext-install pdo_pgsql
 
 # Imposta la document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
@@ -25,19 +24,8 @@ RUN sed -i 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf && \
 COPY . /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
-# Copia lo script di inizializzazione del DB
-COPY init.sql /docker-entrypoint-initdb.d/init.sql
-
-# Copia la configurazione di supervisord
-COPY supervisord.conf /etc/supervisor/supervisord.conf
-
-# Prepara directory di MariaDB
-RUN mkdir -p /var/run/mysqld /var/lib/mysql && \
-    chown -R mysql:mysql /var/run/mysqld /var/lib/mysql && \
-    mariadb-install-db --user=mysql --datadir=/var/lib/mysql
-
 # Espone la porta per Render
 EXPOSE 10000
 
-# Avvia supervisor (che gestisce sia MySQL che Apache)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+# Avvia Apache in foreground (processo principale del container)
+CMD ["apache2-foreground"]

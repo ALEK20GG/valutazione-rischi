@@ -2,12 +2,12 @@
 // config.php
 declare(strict_types=1);
 
-// Database configuration per Render
+// Database configuration (PostgreSQL: Supabase / Render / altri)
 $db_host = getenv('DB_HOST') ?: '127.0.0.1';
 $db_name = getenv('DB_NAME') ?: 'mydb';
-$db_user = getenv('DB_USER') ?: 'root';
-$db_pass = getenv('DB_PASS') ?: 'abcxyz';
-$db_port = getenv('DB_PORT') ?: 3306;
+$db_user = getenv('DB_USER') ?: 'postgres';
+$db_pass = getenv('DB_PASS') ?: 'postgres';
+$db_port = getenv('DB_PORT') ?: 5432;
 
 // Token segreto per identificare il kiosk tramite cookie
 if (!defined('KIOSK_TOKEN')) {
@@ -30,11 +30,12 @@ function getPDO(): PDO {
     if ($pdo === null) {
         $db_host = getenv('DB_HOST') ?: '127.0.0.1';
         $db_name = getenv('DB_NAME') ?: 'mydb';
-        $db_user = getenv('DB_USER') ?: 'root';
-        $db_pass = getenv('DB_PASS') ?: 'abcxyz';
-        $db_port = getenv('DB_PORT') ?: 3306;
+        $db_user = getenv('DB_USER') ?: 'postgres';
+        $db_pass = getenv('DB_PASS') ?: 'postgres';
+        $db_port = getenv('DB_PORT') ?: 5432;
         
-        $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
+        // DSN per PostgreSQL
+        $dsn = "pgsql:host={$db_host};port={$db_port};dbname={$db_name}";
         $pdo = new PDO($dsn, $db_user, $db_pass, [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
