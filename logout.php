@@ -2,8 +2,6 @@
 // logout.php
 require_once __DIR__ . '/functions.php';
 
-$pdo = getPDO();
-
 // Si permette logout via sessione oppure via sendBeacon (uid inviato)
 $kiosk = isKiosk() ? 1 : 0;
 $uid = null;
@@ -23,11 +21,15 @@ if (!empty($_SESSION['uid'])) {
 }
 
 if ($uid !== null) {
-    // Inserisci log logout
+    // Inserisci log logout (se DB abilitato)
     insertLog($uid, 0, $kiosk);
-    // Aggiorna online flag solo se era online
-    $stmt = $pdo->prepare("UPDATE t_user SET online = 0, last_heartbeat = NULL WHERE uid = :uid");
-    $stmt->execute([':uid' => $uid]);
+
+    // Aggiorna online flag solo se DB abilitato
+    if (!defined('DB_DISABLED') || !DB_DISABLED) {
+        $pdo = getPDO();
+        $stmt = $pdo->prepare("UPDATE t_user SET online = 0, last_heartbeat = NULL WHERE uid = :uid");
+        $stmt->execute([':uid' => $uid]);
+    }
 
     // Se logout via sessione, distruggi sessione
     if (!empty($_SESSION['uid']) && (int)$_SESSION['uid'] === $uid) {

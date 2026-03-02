@@ -1,6 +1,12 @@
 <?php
 // cleanup.php - da lanciare via cron (php /path/cleanup.php)
 require_once __DIR__ . '/functions.php';
+
+// In modalità senza database non fa nulla
+if (defined('DB_DISABLED') && DB_DISABLED) {
+    exit(0);
+}
+
 $pdo = getPDO();
 
 // soglia in secondi

@@ -6,6 +6,9 @@ $errors = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (defined('DB_DISABLED') && DB_DISABLED) {
+        $errors[] = "Registrazione non disponibile: il database è disabilitato in questa versione di sviluppo.";
+    } else {
     if (!isKiosk()) {
         $errors[] = "La registrazione è permessa solo dalla postazione dedicata.";
     } else {
@@ -20,16 +23,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (strlen($password) < 6) {
             $errors[] = "La password deve essere di almeno 6 caratteri.";
         } else {
-            $pdo = getPDO();
-            $stmt = $pdo->prepare("SELECT uid FROM t_user WHERE username = :username");
-            $stmt->execute([':username' => $username]);
-            if ($stmt->fetch()) {
-                $errors[] = "Username già esistente.";
+            // In modalità senza DB, blocchiamo la registrazione con un messaggio chiaro.
+            if (defined('DB_DISABLED') && DB_DISABLED) {
+                $errors[] = "Registrazione non disponibile: il database è disabilitato.";
             } else {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO t_user (username, password, creation_date, online) VALUES (:username, :password, NOW(), 0)");
-                $stmt->execute([':username' => $username, ':password' => $hash]);
-                $success = true;
+                $pdo = getPDO();
+                $stmt = $pdo->prepare("SELECT uid FROM t_user WHERE username = :username");
+                $stmt->execute([':username' => $username]);
+                if ($stmt->fetch()) {
+                    $errors[] = "Username già esistente.";
+                } else {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("INSERT INTO t_user (username, password, creation_date, online) VALUES (:username, :password, NOW(), 0)");
+                    $stmt->execute([':username' => $username, ':password' => $hash]);
+                    $success = true;
+                }
             }
         }
     }

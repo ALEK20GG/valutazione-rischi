@@ -11,16 +11,19 @@ if (empty($_SESSION['uid'])) {
 $uid = (int)$_SESSION['uid'];
 $username = $_SESSION['username'] ?? 'utente';
 
-// Recupera tutti i log dell'utente
-$pdo = getPDO();
-$stmt = $pdo->prepare("
-    SELECT log_id, op_type, timestamp, is_kiosk 
-    FROM t_log 
-    WHERE uid = :uid 
-    ORDER BY timestamp DESC
-");
-$stmt->execute([':uid' => $uid]);
-$logs = $stmt->fetchAll();
+// Recupera tutti i log dell'utente (vuoto se DB disabilitato)
+$logs = [];
+if (!defined('DB_DISABLED') || !DB_DISABLED) {
+    $pdo = getPDO();
+    $stmt = $pdo->prepare("
+        SELECT log_id, op_type, timestamp, is_kiosk 
+        FROM t_log 
+        WHERE uid = :uid 
+        ORDER BY timestamp DESC
+    ");
+    $stmt->execute([':uid' => $uid]);
+    $logs = $stmt->fetchAll();
+}
 
 // Imposta headers per il download CSV
 $filename = 'log_accessi_' . $username . '_' . date('Y-m-d_His') . '.csv';

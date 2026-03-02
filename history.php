@@ -5,17 +5,19 @@ require_once __DIR__ . '/functions.php';
 requireAuth();
 
 $evaluations = [];
-try {
-    $pdo = getPDO();
-    $stmt = $pdo->prepare(
-        "SELECT * FROM t_niosh_evaluations 
-         WHERE uid = :uid 
-         ORDER BY created_at DESC"
-    );
-    $stmt->execute([':uid' => getCurrentUid()]);
-    $evaluations = $stmt->fetchAll();
-} catch (Exception $e) {
-    error_log("History query error: " . $e->getMessage());
+if (!defined('DB_DISABLED') || !DB_DISABLED) {
+    try {
+        $pdo = getPDO();
+        $stmt = $pdo->prepare(
+            "SELECT * FROM t_niosh_evaluations 
+             WHERE uid = :uid 
+             ORDER BY created_at DESC"
+        );
+        $stmt->execute([':uid' => getCurrentUid()]);
+        $evaluations = $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log("History query error: " . $e->getMessage());
+    }
 }
 
 /**

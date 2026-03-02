@@ -11,32 +11,39 @@ $uid = (int)$_SESSION['uid'];
 $username = $_SESSION['username'] ?? 'utente';
 $is_kiosk = isKiosk() ? 1 : 0;
 
-// Recupera statistiche accessi
-$pdo = getPDO();
+// Recupera statistiche accessi (disabilitato se DB_DISABLED)
+$total_accessi = 0;
+$accessi_kiosk = 0;
+$accessi_altre = 0;
+$logs = [];
 
-// Conta accessi totali dell'utente
-$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM t_log WHERE uid = :uid AND op_type = 1");
-$stmt->execute([':uid' => $uid]);
-$total_accessi = $stmt->fetch()['total'];
+if (!defined('DB_DISABLED') || !DB_DISABLED) {
+    $pdo = getPDO();
 
-// Conta accessi dalla postazione kiosk
-$stmt = $pdo->prepare("SELECT COUNT(*) as total FROM t_log WHERE uid = :uid AND op_type = 1 AND is_kiosk = 1");
-$stmt->execute([':uid' => $uid]);
-$accessi_kiosk = $stmt->fetch()['total'];
+    // Conta accessi totali dell'utente
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM t_log WHERE uid = :uid AND op_type = 1");
+    $stmt->execute([':uid' => $uid]);
+    $total_accessi = (int)$stmt->fetch()['total'];
 
-// Conta accessi da altre postazioni
-$accessi_altre = $total_accessi - $accessi_kiosk;
+    // Conta accessi dalla postazione kiosk
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM t_log WHERE uid = :uid AND op_type = 1 AND is_kiosk = 1");
+    $stmt->execute([':uid' => $uid]);
+    $accessi_kiosk = (int)$stmt->fetch()['total'];
 
-// Recupera tutti gli accessi (ultimi 50)
-$stmt = $pdo->prepare("
-    SELECT log_id, op_type, timestamp, is_kiosk 
-    FROM t_log 
-    WHERE uid = :uid 
-    ORDER BY timestamp DESC 
-    LIMIT 50
-");
-$stmt->execute([':uid' => $uid]);
-$logs = $stmt->fetchAll();
+    // Conta accessi da altre postazioni
+    $accessi_altre = $total_accessi - $accessi_kiosk;
+
+    // Recupera tutti gli accessi (ultimi 50)
+    $stmt = $pdo->prepare("
+        SELECT log_id, op_type, timestamp, is_kiosk 
+        FROM t_log 
+        WHERE uid = :uid 
+        ORDER BY timestamp DESC 
+        LIMIT 50
+    ");
+    $stmt->execute([':uid' => $uid]);
+    $logs = $stmt->fetchAll();
+}
 ?>
 <!doctype html>
 <html lang="it">

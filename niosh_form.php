@@ -57,35 +57,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Aggiunge il nome valutazione anche all'array risultato (per la vista)
         $result['eval_name'] = $eval_name;
 
-        // Salva nel database
-        try {
-            $pdo = getPDO();
-            $stmt = $pdo->prepare(
-                "INSERT INTO t_niosh_evaluations 
-                 (uid, eval_name, weight, horizontal_distance, vertical_distance, 
-                  vertical_height, distance_moved, asymmetric_angle, frequency, 
-                  duration, grip_quality, rwl, li)
-                 VALUES (:uid, :eval_name, :weight, :horizontal_distance, :vertical_distance,
-                         :vertical_height, :distance_moved, :asymmetric_angle, :frequency,
-                         :duration, :grip_quality, :rwl, :li)"
-            );
-            $stmt->execute([
-                ':uid' => getCurrentUid(),
-                ':eval_name' => $eval_name,
-                ':weight' => $weight,
-                ':horizontal_distance' => $horizontal_distance,
-                ':vertical_distance' => 0,
-                ':vertical_height' => $vertical_height,
-                ':distance_moved' => $distance_moved,
-                ':asymmetric_angle' => $asymmetric_angle,
-                ':frequency' => $frequency,
-                ':duration' => $duration,
-                ':grip_quality' => $grip_quality,
-                ':rwl' => $result['rwl'],
-                ':li' => $result['li']
-            ]);
-        } catch (Exception $e) {
-            error_log("Database save error: " . $e->getMessage());
+        // Salva nel database (disabilitato se DB_DISABLED)
+        if (!defined('DB_DISABLED') || !DB_DISABLED) {
+            try {
+                $pdo = getPDO();
+                $stmt = $pdo->prepare(
+                    "INSERT INTO t_niosh_evaluations 
+                     (uid, eval_name, weight, horizontal_distance, vertical_distance, 
+                      vertical_height, distance_moved, asymmetric_angle, frequency, 
+                      duration, grip_quality, rwl, li)
+                     VALUES (:uid, :eval_name, :weight, :horizontal_distance, :vertical_distance,
+                             :vertical_height, :distance_moved, :asymmetric_angle, :frequency,
+                             :duration, :grip_quality, :rwl, :li)"
+                );
+                $stmt->execute([
+                    ':uid' => getCurrentUid(),
+                    ':eval_name' => $eval_name,
+                    ':weight' => $weight,
+                    ':horizontal_distance' => $horizontal_distance,
+                    ':vertical_distance' => 0,
+                    ':vertical_height' => $vertical_height,
+                    ':distance_moved' => $distance_moved,
+                    ':asymmetric_angle' => $asymmetric_angle,
+                    ':frequency' => $frequency,
+                    ':duration' => $duration,
+                    ':grip_quality' => $grip_quality,
+                    ':rwl' => $result['rwl'],
+                    ':li' => $result['li']
+                ]);
+            } catch (Exception $e) {
+                error_log("Database save error: " . $e->getMessage());
+            }
         }
     }
 }

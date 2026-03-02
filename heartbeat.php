@@ -15,8 +15,11 @@ if (!$uid) {
 }
 
 $uid = (int)$uid;
-$pdo = getPDO();
-$stmt = $pdo->prepare("UPDATE t_user SET last_heartbeat = NOW() WHERE uid = :uid");
-$stmt->execute([':uid' => $uid]);
+
+if (!defined('DB_DISABLED') || !DB_DISABLED) {
+    $pdo = getPDO();
+    $stmt = $pdo->prepare("UPDATE t_user SET last_heartbeat = NOW() WHERE uid = :uid");
+    $stmt->execute([':uid' => $uid]);
+}
 
 echo json_encode(['ok' => true]);

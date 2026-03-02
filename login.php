@@ -5,36 +5,40 @@ require_once __DIR__ . '/functions.php';
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-
-    if ($username === '' || $password === '') {
-        $errors[] = "Compila tutti i campi.";
+    if (defined('DB_DISABLED') && DB_DISABLED) {
+        $errors[] = "Login non disponibile: il database è disabilitato in questa versione di sviluppo.";
     } else {
-        try {
-            $pdo = getPDO();
-            $stmt = $pdo->prepare("SELECT * FROM t_user WHERE username = :username LIMIT 1");
-            $stmt->execute([':username' => $username]);
-            $user = $stmt->fetch();
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-            if (!$user || !password_verify($password, $user['password'])) {
-                $errors[] = "Credenziali non valide.";
-            } else {
-                $uid = (int)$user['uid'];
+        if ($username === '' || $password === '') {
+            $errors[] = "Compila tutti i campi.";
+        } else {
+            try {
+                $pdo = getPDO();
+                $stmt = $pdo->prepare("SELECT * FROM t_user WHERE username = :username LIMIT 1");
+                $stmt->execute([':username' => $username]);
+                $user = $stmt->fetch();
 
-                insertLog($uid, 1, isKiosk() ? 1 : 0);
+                if (!$user || !password_verify($password, $user['password'])) {
+                    $errors[] = "Credenziali non valide.";
+                } else {
+                    $uid = (int)$user['uid'];
 
-                session_regenerate_id(true);
-                $_SESSION['uid'] = $uid;
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['is_kiosk'] = isKiosk() ? 1 : 0;
+                    insertLog($uid, 1, isKiosk() ? 1 : 0);
 
-                header('Location: niosh_form.php');
-                exit;
+                    session_regenerate_id(true);
+                    $_SESSION['uid'] = $uid;
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['is_kiosk'] = isKiosk() ? 1 : 0;
+
+                    header('Location: niosh_form.php');
+                    exit;
+                }
+            } catch (Exception $e) {
+                $errors[] = "Errore di connessione al database.";
+                error_log("Login error: " . $e->getMessage());
             }
-        } catch (Exception $e) {
-            $errors[] = "Errore di connessione al database.";
-            error_log("Login error: " . $e->getMessage());
         }
     }
 }

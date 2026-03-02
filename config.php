@@ -2,7 +2,13 @@
 // config.php
 declare(strict_types=1);
 
-// Database configuration (PostgreSQL: Supabase / Render / altri)
+// Modalità senza database: per sviluppo/bozza
+// Imposta a true per DISABILITARE completamente ogni connessione al DB.
+if (!defined('DB_DISABLED')) {
+    define('DB_DISABLED', true);
+}
+
+// (Lasciamo comunque le variabili nel caso servano in futuro)
 $db_host = getenv('DB_HOST') ?: '127.0.0.1';
 $db_name = getenv('DB_NAME') ?: 'mydb';
 $db_user = getenv('DB_USER') ?: 'postgres';
@@ -25,7 +31,15 @@ if (!defined('SETUP_PASSWORD')) {
     define('SETUP_PASSWORD', getenv('SETUP_PASSWORD') ?: 'changeme-setup');
 }
 
+/**
+ * Stub di connessione al DB.
+ * In modalità DB_DISABLED non tenta alcuna connessione.
+ */
 function getPDO(): PDO {
+    if (DB_DISABLED) {
+        throw new RuntimeException('Database disabilitato (DB_DISABLED = true).');
+    }
+
     static $pdo = null;
     if ($pdo === null) {
         $db_host = getenv('DB_HOST') ?: '127.0.0.1';
@@ -33,7 +47,7 @@ function getPDO(): PDO {
         $db_user = getenv('DB_USER') ?: 'postgres';
         $db_pass = getenv('DB_PASS') ?: 'postgres';
         $db_port = getenv('DB_PORT') ?: 5432;
-        
+
         // DSN per PostgreSQL (Supabase richiede SSL)
         $dsn = "pgsql:host={$db_host};port={$db_port};dbname={$db_name};sslmode=require";
         $pdo = new PDO($dsn, $db_user, $db_pass, [

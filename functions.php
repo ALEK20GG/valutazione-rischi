@@ -87,6 +87,11 @@ function removeKioskCookie(): void {
  * op_type: 1 = login, 0 = logout
  */
 function insertLog(int $uid, int $op_type, int $is_kiosk): void {
+    if (defined('DB_DISABLED') && DB_DISABLED) {
+        // Niente log in modalità senza database
+        return;
+    }
+
     try {
         $pdo = getPDO();
         $stmt = $pdo->prepare(
@@ -108,6 +113,11 @@ function insertLog(int $uid, int $op_type, int $is_kiosk): void {
  * Forza logout di un utente (usa quando un nuovo utente effettua login sul kiosk)
  */
 function forceLogoutUser(int $uid, int $is_kiosk): void {
+    if (defined('DB_DISABLED') && DB_DISABLED) {
+        // Nessuna azione in modalità senza database
+        return;
+    }
+
     $pdo = getPDO();
     // Inserisci record di logout
     insertLog($uid, 0, $is_kiosk);
@@ -121,6 +131,10 @@ function forceLogoutUser(int $uid, int $is_kiosk): void {
  * Ritorna row o null.
  */
 function getKioskOnlineUser(): ?array {
+    if (defined('DB_DISABLED') && DB_DISABLED) {
+        return null;
+    }
+
     $pdo = getPDO();
     $stmt = $pdo->prepare("SELECT * FROM t_user WHERE online = 1 LIMIT 1");
     $stmt->execute();
