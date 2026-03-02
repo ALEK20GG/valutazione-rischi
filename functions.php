@@ -18,6 +18,16 @@ function isKiosk(): bool {
  * Richiede autenticazione
  */
 function requireAuth(): void {
+    // Se il database è disabilitato, bypassa completamente l'autenticazione
+    if (defined('DB_DISABLED') && DB_DISABLED) {
+        if (empty($_SESSION['uid'])) {
+            $_SESSION['uid'] = 0;
+            $_SESSION['username'] = 'Demo';
+            $_SESSION['is_kiosk'] = 0;
+        }
+        return;
+    }
+
     if (empty($_SESSION['uid'])) {
         header('Location: login.php');
         exit;

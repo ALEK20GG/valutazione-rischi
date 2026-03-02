@@ -2,12 +2,20 @@
 // login.php
 require_once __DIR__ . '/functions.php';
 
+// Se il database è disabilitato, bypassa completamente il login
+if (defined('DB_DISABLED') && DB_DISABLED) {
+    if (empty($_SESSION['uid'])) {
+        $_SESSION['uid'] = 0;
+        $_SESSION['username'] = 'Demo';
+        $_SESSION['is_kiosk'] = 0;
+    }
+    header('Location: niosh_form.php');
+    exit;
+}
+
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (defined('DB_DISABLED') && DB_DISABLED) {
-        $errors[] = "Login non disponibile: il database è disabilitato in questa versione di sviluppo.";
-    } else {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 

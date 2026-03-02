@@ -2,13 +2,21 @@
 // download_log.php - Permette il download del log personale in CSV
 require_once __DIR__ . '/functions.php';
 
-// Verifica che l'utente sia loggato
-if (empty($_SESSION['uid'])) {
-    header('Location: login.php');
-    exit;
+// Verifica che l'utente sia loggato (bypass in modalità senza DB)
+if (defined('DB_DISABLED') && DB_DISABLED) {
+    if (empty($_SESSION['uid'])) {
+        $_SESSION['uid'] = 0;
+        $_SESSION['username'] = 'Demo';
+        $_SESSION['is_kiosk'] = 0;
+    }
+} else {
+    if (empty($_SESSION['uid'])) {
+        header('Location: login.php');
+        exit;
+    }
 }
 
-$uid = (int)$_SESSION['uid'];
+$uid = (int)($_SESSION['uid'] ?? 0);
 $username = $_SESSION['username'] ?? 'utente';
 
 // Recupera tutti i log dell'utente (vuoto se DB disabilitato)

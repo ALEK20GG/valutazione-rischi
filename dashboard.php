@@ -2,12 +2,21 @@
 // dashboard.php
 require_once __DIR__ . '/functions.php';
 
-if (empty($_SESSION['uid'])) {
-    header('Location: login.php');
-    exit;
+// In modalità senza DB, bypass login e usa utente demo
+if (defined('DB_DISABLED') && DB_DISABLED) {
+    if (empty($_SESSION['uid'])) {
+        $_SESSION['uid'] = 0;
+        $_SESSION['username'] = 'Demo';
+        $_SESSION['is_kiosk'] = 0;
+    }
+} else {
+    if (empty($_SESSION['uid'])) {
+        header('Location: login.php');
+        exit;
+    }
 }
 
-$uid = (int)$_SESSION['uid'];
+$uid = (int)($_SESSION['uid'] ?? 0);
 $username = $_SESSION['username'] ?? 'utente';
 $is_kiosk = isKiosk() ? 1 : 0;
 
